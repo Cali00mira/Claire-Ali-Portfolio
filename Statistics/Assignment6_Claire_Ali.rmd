@@ -1,0 +1,188 @@
+---
+title: "DATA 621 Assignment 6"
+author: "Claire Ali"
+date: "Tuesday, 18th March, 2025"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(survival)
+library(ggsurvfit)
+library(dplyr)
+```
+
+# Assignment 6
+
+### Data 621: Advanced Statistical Modeling
+
+### Questions:
+
+#### 1. Looking at the following table that shows time in weeks to first relapse of a specific disease since entering the study, where the “+” sign means they were censored at that point, and not having the “+” means they actually relapsed. The groups `maintenance` and `non maintenance`, refer to maintaining chemotherapy.
+
+|                       |                                                |
+|-----------------------|------------------------------------------------|
+| Group                 | Time in weeks                                  |
+| Maintenance group     | 9, 13, 13+, 18, 23, 28+, 31, 34, 45+, 48, 161+ |
+| Non maintenance group | 5, 5, 8, 8, 12, 16+, 23, 27, 30, 33, 43, 45    |
+
+a.  Create the dataset you’d use for doing survival analysis in R. (2 points)
+
+```{r,eval=TRUE}
+time = c(9, 13, 13, 18, 23, 28, 31, 34, 45, 48, 161,5, 5, 8, 8, 12, 16, 23, 27, 30, 33, 43, 45)
+status = c(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1)
+group = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,0,0,0,0,0,0,0,0,0,0,0,0)
+
+data = data.frame(time,status,group)
+data <- data %>% 
+  mutate(group = case_when(
+    group == 0 ~ "Non Maintenance",
+    group == 1 ~ "Maintenance")
+  )
+
+head(data)
+```
+
+b.  Do a Kaplan Meier graph comparing the two groups and identifying each group, make sure to show censored. (2 points)
+
+```{r,eval=TRUE}
+survfit2(Surv(time, status) ~ group, data = data) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Weeks",
+    y = "Overall survival probability"
+  ) + add_censor_mark()
+```
+
+c.  Discuss if a log-rank test would be appropriate and if so do it and interpret. (3 points)
+
+To use a log-rank test, our data must adhere to the proportional hazard assumption. From the above graph, we see that there is a clear difference in the curves and they do not cross. Furthermore, we see that the curves are fairly parallel until about 45 weeks. Thus, we do not violate the proportionality assumption and can use a log-rank test. When conducting our test, we will use a significance level of 0.01 for our conclusion.
+
+```{r,eval=TRUE}
+logrank.test <- survdiff(Surv(time, status) ~ group, data = data)
+
+logrank.test
+```
+
+From the log-rank test, we find that there is no significant difference in the data for disease relapse between individuals who chose or did not choose chemotherapy, with a p-value of 0.07 and cannot conclude a difference in relapse time attributed to maintenance.
+
+#### 2. The table below is based on some data from a sample from the 1967-1980 Evans County study. Survival times (in years) are given for two study groups, each with 25 participants. Group 1 has no history of chronic disease (CHR=0), and group 2 has a positive history of chronic disease (CHR=1).
+
+Group 1 (CHR=0): 12.3+, 5.4, 8.2, 12.2+, 11.7, 10.0, 5.7, 9.8, 2.6, 11.0, 9.2, 12.1+,6.6, 2.2, 1.8, 10.2, 10.7, 11.1, 5.3, 3.5, 9.2, 2.5, 8.7, 3.8, 3.0
+
+Group 2 (CHR=1): 5.8, 2.9, 8.4, 8.3, 9.1, 4.2, 4.1, 1.8, 3.1, 11.4, 2.4, 1.4, 5.9, 1.6, 2.8, 4.9, 3.5, 6.5, 9.9, 3.6, 5.2, 8.8, 7.8, 4.7, 3.9
+
+a.  Fill in the missing information, labelled as “?”, in the table. (11 points)
+
+|                  |                    |                     |                      |                  |                  |                    |                     |                      |                  |
+|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
+| **Time (CHR=0)** | **n.risk (CHR=0)** | **n.event (CHR=0)** | **n.censor (CHR=0)** | **surv (CHR=0)** | **Time (CHR=1)** | **n.risk (CHR=1)** | **n.event (CHR=1)** | **n.censor (CHR=1)** | **surv (CHR=1)** |
+|        0         |         25         |          0          |          0           |        1         |        0         |         25         |          0          |          0           |        1         |
+|       1.8        |         25         |          1          |          0           |       0.96       |       1.4        |         25         |          1          |          0           |       0.96       |
+|       2.2        |         24         |          1          |          0           |       0.92       |       1.6        |         24         |          1          |          0           |       0.92       |
+|       2.5        |         23         |          1          |          0           |       0.88       |       1.8        |         23         |          1          |          0           |       0.88       |
+|       2.6        |         22         |          1          |          0           |       0.84       |       2.4        |         22         |          1          |          0           |       0.84       |
+|        3         |         21         |          1          |          0           |       0.8        |       2.8        |         21         |          1          |          0           |       0.8        |
+|       3.5        |         20         |          1          |          0           |       0.76       |       2.9        |         20         |          1          |          0           |       0.76       |
+|       3.8        |         19         |          1          |          0           |       0.72       |       3.1        |         19         |          1          |          0           |       0.72       |
+|       5.3        |         18         |          1          |          0           |       0.68       |       3.5        |         18         |          1          |          0           |       0.68       |
+|       5.4        |         17         |          1          |          0           |       0.64       |       3.6        |         17         |          1          |          0           |       0.64       |
+|       5.7        |         16         |          1          |          0           |       0.6        |       3.9        |         16         |          1          |          0           |       0.6        |
+|       6.6        |         15         |          1          |          0           |       0.56       |       4.1        |         15         |          1          |          0           |       0.56       |
+|       8.2        |         14         |          1          |          0           |       0.52       |       4.2        |         14         |          1          |          0           |       0.52       |
+|       8.7        |         13         |          1          |          0           |       0.48       |       4.7        |         13         |          1          |          0           |       0.48       |
+|       9.2        |         12         |          2          |          0           |       0.4        |       4.9        |         12         |          1          |          0           |       0.44       |
+|       9.8        |         10         |          1          |          0           |       0.36       |       5.2        |         11         |          1          |          0           |       0.4        |
+|        10        |         9          |          1          |          0           |       0.32       |       5.8        |         10         |          1          |          0           |       0.36       |
+|       10.2       |         8          |          1          |          0           |       0.28       |       5.9        |         9          |          1          |          0           |       0.32       |
+|       10.7       |         7          |          1          |          0           |       0.24       |       6.5        |         8          |          1          |          0           |       0.28       |
+|        11        |         6          |          1          |          0           |       0.2        |       7.8        |         7          |          1          |          0           |       0.24       |
+|       11.1       |         5          |          1          |          0           |       0.16       |       8.3        |         6          |          1          |          0           |       0.2        |
+|       11.7       |         4          |          1          |          0           |       0.12       |       8.4        |         5          |          1          |          0           |       0.16       |
+|       12.1       |         3          |          0          |          1           |       0.12       |       8.8        |         4          |          1          |          0           |       0.12       |
+|       12.2       |         2          |          0          |          1           |       0.12       |       9.1        |         3          |          1          |          0           |       0.08       |
+|       12.3       |         1          |          0          |          1           |       0.12       |       9.9        |         2          |          1          |          0           |       0.04       |
+|                  |                    |                     |                      |                  |       11.4       |         1          |          1          |          0           |        0         |
+
+b.  use the data above to create the KM curves by group and comment on the behaviors of each group. (3 points)
+
+```{r,eval=TRUE}
+chr1 = c(12.3, 5.4, 8.2, 12.2, 11.7, 10.0, 5.7, 9.8, 2.6, 11.0, 9.2, 12.1,6.6, 2.2, 1.8, 10.2, 10.7,
+         11.1, 5.3, 3.5, 9.2, 2.5, 8.7, 3.8, 3.0)
+chr2 = c(5.8, 2.9, 8.4, 8.3, 9.1, 4.2, 4.1, 1.8, 3.1, 11.4, 2.4, 1.4, 5.9, 1.6, 2.8, 4.9, 3.5, 6.5,
+         9.9, 3.6, 5.2, 8.8, 7.8, 4.7, 3.9)
+time = c(chr1,chr2)
+
+stat1 = c(0,1,1,0,1,1,1,1,1,1,1,0)
+stat11 = rep(1,13)
+stat111 = c(stat1,stat11)
+stat2 = rep(1,25)
+status = c(stat111,stat2)
+
+g1 = rep("CHR=0",25)
+g2 = rep("CHR=1",25)
+group = c(g1,g2)
+
+hist = data.frame(time,status,group)
+
+survfit2(Surv(time, status) ~ group, data = hist) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Weeks",
+    y = "Overall survival probability"
+  ) + add_censor_mark()
+```
+
+Both groups experience a steady decrease in survival probability as time increases. The curves appear to touch at around 2.6 weeks; however, the curves exhibit a fairly parallel relation with respect to each other. There is a notable difference between the lines in which the group with no history of chronic disease seems to have a slightly higher survival probability than the group with a history of chronic disease.
+
+c.  Based on the now filled table above give the median survival time (step) for each group and explain. (3 points)
+
+```{r,eval=TRUE}
+survfit(Surv(time, status) ~ group, data = hist)
+```
+
+We find that the median survival time for patients without and with a history of chronic disease is 8.7 and 4.7 years, respectively. The median step is larger for the group with no history of chronic disease. This indicates that the estimated median survival time is greater for those with no past disease history.
+
+d.  Based on your graph, if appropriate do a log-rank test and conclude. (3 points)
+
+Based on our graph, we see a clear difference between the K-M curves for the two groups. The two experience a fairly parallel decrease in overall survival probability with little to no overlap. As such we will use a log-rank test at a significance level of 0.1 for our examination.
+
+```{r,eval=TRUE}
+logrank.test <- survdiff(Surv(time, status) ~ group, data = hist)
+
+logrank.test
+```
+
+We see that there is a notable difference in survival by group, with a p-value of 0.005 in the sample. Thus, we find that a past history of chronic disease has a significant impact on survival time.
+
+#### 3. Answer True or False for each (1 point each):
+
+a.  In survival analysis, the outcome variable is a dichotomous one.
+
+True; the outcome variable states that an event did or did not happen.
+
+b.  If the study (and hence the observation) finishes before a participant has had the event, then the corresponding survival time is censored.
+
+True; patients who reach the study endpoint without an event occurring will undergo "right censoring".
+
+c.  S(t)=P(T\>t) is called the hazard function.
+
+False; S(t)=P(T\>t) is the survival function, which notes the probability of surviving until time "t".
+
+d.  The hazard function, theoretically, has no upper bound.
+
+True; the hazard function is a rate, not a probability, and can theoretically range between 0 and infinity.
+
+#### 4. Assuming you are given a survival figure (no raw data), if survival curve for a certain group 1 is below the one for group 2 up to time t, and at this t they cross and now group 1’s curve is above the one of group 2:
+
+a.  Can you tell which group has better survival overall? Why? (2 points)
+
+You cannot make a definitive conclusion about which group has a better overall survival. Assessing the crossed curves for survival will be dependent on the magnitude of each group's advantage/disadvantage. With no raw data, we can only rely on the graph and cannot conduct log-rank or other tests to identify a significant difference. Additional metrics like the hazard ratio, mean/median survival time, or area under each curve could be used to generate more definitive conclusions but are limited by the lack of raw data.
+
+b.  Up to t? (1 point)
+
+Prior to time t, group 1 has worse overall survival than group 2, as the survival curve is below that of group 2. As such, until time t, individuals in group 1 are dying at a higher rate than those in group 2.
+
+c.  After t? (1 point)
+
+After time t, group 1’s survival curve is above that of group 2, indicating that after t, group 1 has a higher survival probability than group 2. This implies that those who survived past t in group 1 may be more likely to survive than those in group 2. In a real-world setting, such as a drug trial, this could be due to long term effects of the drug, which may lower survival probability.

@@ -1,0 +1,218 @@
+---
+title: "DATA 621 Assignment 6"
+author: "Claire Ali"
+date: "Tuesday, 18th March, 2025"
+output: pdf_document
+---
+
+
+# Assignment 7
+
+### Data 621: Advanced Statistical Modeling 
+
+------------------------------------------------------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(KMsurv)
+library(survival)
+
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(geepack)
+library(nlme)
+
+```
+
+
+### Questions:
+
+
+#### 1. Dataset `tongue` in library `KMsurv` is from a study that was conducted on the effects of ploidy on the prognosis of patients with cancer of the tongue. Tissue samples were examined to determine if the tumor had a aneuploid or diploid DNA profile. Times to death for these two groups (Aneuploid or Diploid) of patients are recorded in the datatset.
+
+a. Find the p-value of a test of the hypothesis of no effect of ploidy
+on survival using the score test and the Breslow method of handling
+ties. (2 points)
+
+To be reasonably certain that our result is not due to chance, we will use a significance level of 0.05 for determination.
+```{r,eval=TRUE}
+# type: Tumor DNA profile (1=Aneuploid Tumor, 2=Diploid Tumor)
+# time: Time to death or on-study time, weeks
+# delta: Death indicator (0=alive, 1=dead)
+
+data("tongue")
+toungue <- data.frame(tongue)
+
+toungue$type <- factor(toungue$type, levels = c(1, 2), labels = c("Aneuploid Tumor", "Diploid Tumor"))
+toungue$type <- relevel(toungue$type, ref = "Aneuploid Tumor")
+
+model <- coxph(Surv(time, delta) ~ type, data=tongue,method="breslow")
+s.model <- summary(model)
+s.model$sctest
+```
+The resulting p-value is 0.0975; at our alpha level we are unable to reject the null hypothesis and cannot conclude that tumor profile has no effect on survival time. 
+
+b. Estimate $\beta$ and its standard
+error using the Breslow method of handling ties and find a 95%
+confidence interval for the hazard ratio of death of an individual with
+an aneuploid tumor as compared to an individual with a diploid tumor. (4
+points)
+
+```{r,eval=TRUE}
+s.model
+```
+
+From the above output, we find that beta can be estimated as 1.586, with a confidence interval of (0.915,2.748) and standard error of 0.281. As such, the hazard of death for patients with a diploid tumor is 1.586 times higher compared to those with an aneuploid tumor, suggesting that diploid tumors are associated with an higher risk of dying, relative to aneuploid tumors
+
+c. Repeat (1.A) using the likelihood test. Compare your answer to that
+of part (1.A). (1 points)
+
+```{r,eval=TRUE}
+s.model$logtest
+```
+
+In (1.A), we found a test score of 2.746 for the score test. The likelihood test found a score of 2.611, which is fairly close. The p-values were also very close, indicating that for this model, both are decent test methods.
+
+d. Repeat (1.A) using the Wald test. Compare your answer to those in
+parts (1.A) and (1.C). (1 points)
+
+```{r,eval=TRUE}
+s.model$waldtest
+```
+
+In (1.A), we found a test score of 2.746 for the score test and in (1.B) the likelihood test found a score of 2.611. The wald test yielded a score of 2.700, which is fairly close to both. The p-values were also very close, indicating that for this model, wald is a decent test method.
+
+\
+
+#### 2. Using the data `pott.csv` used in class, we fitted the linear mixed effects model with `age`, `sex` and the interaction. As random effects , we have already fitted random intercepts and random slope for `age`.
+
+a. With this model, we have known that the random slopes term was not
+needed, now check if the random intercepts are needed and conclude. (3
+points)
+
+```{r,eval=TRUE}
+pott = read.csv("pott.csv")
+pott.lme<-lmer(dist ~ age*sex + (1|subject), data=pott)
+rand(pott.lme, refit=F)
+```
+
+The test statistic from the anova is very small. Thus we are able to conclude that the random intercepts in the model are significant and we should keep them in the model.
+
+
+
+b. With the model with only random intercepts, check to see if
+$age^2$ and $age^3$ (along
+with `age`) are needed and and also check the interaction of each with
+`sex`. (7 points)
+
+```{r,eval=TRUE}
+pott.lme2<-lmer(dist ~ age*sex + poly(age,3)*sex + (1|subject), data=pott)
+summary(pott.lme2)
+```
+
+Sex is not a significant interaction with higher order age terms in the model so we will first remove interaction terms and check against the original model.
+
+```{r,eval=TRUE}
+pott.lme3<-lmer(dist ~ age*sex + poly(age,3) + (1|subject), data=pott)
+anova(pott.lme2, pott.lme3, refit=FALSE)
+```
+
+The small p-value tells us that we should keep the more complex model with interaction terms. Next, we will compare with the model with no higher order terms.
+
+```{r,eval=TRUE}
+pott.lme4<-lmer(dist ~ age*sex + (1|subject), data=pott)
+anova(pott.lme2, pott.lme4, refit=FALSE)
+```
+
+The small p-value tells us that we should keep the more complex model with higher order terms. Thus we should keep the original fixed effects model, with all terms included.
+
+c. Fit the model with a GEE, using the same fixed effects as in 2.A with
+an AR(1) structure, and then compare with an independence structure.
+Report the results and conclude. (7 points)
+
+Hint: a) Compare the results with using `lme` (2 points); b) Comment on
+the AR (1) structure (1 point); c) Compare the results between AR(1) and
+independence structure (3 points); d) Conclusion (1 point).
+
+```{r,eval=TRUE}
+# GEE with AR(1) structure
+pott.GEE.AR1 <- geeglm(dist ~ age*sex, data=pott,family = gaussian, id = subject, corstr = "ar1")
+summary(pott.GEE.AR1)
+
+# GEE with independence structure
+pott.GEE.ind <- geeglm(dist ~ age*sex, data=pott,family = gaussian, 
+                       id = subject, corstr = "independence")
+summary(pott.GEE.ind)
+```
+When compared with the lme model in 2A, the GEE with AR1 structure yields fairly similar results, with all estimates having a less than 0.5 unit difference between models. The GEE with independence structure yields estimated values equal to the lme model with similar p-values. All three models have the same variables deemed significant, though the p-value varies slightly. The GEE with AR1 structure differs the most between these three models. Between the respective GEE models, the independence model has slightly lower standard errors for estimates. Both models yielded similar estimates suggesting that the data is robust enough to compensate for any differences in the underlying correlation structure. We will compare further with a QIC test:
+
+```{r,eval=TRUE}
+QIC(pott.GEE.AR1)
+QIC(pott.GEE.ind)
+
+```
+
+We prefer models with smaller values  of QIC, CIC, QICu, or QICc. All of these values are smaller in the independence structure model. Thus we find that the independence model may be a better fit for the data.
+
+\
+
+#### 3. Data Mathscores.csv contains school numbers (ids), minority to indicate if the student is from a minority, sex, ses socioeconomic level (centred), sector whether public or Catholic school, and the actual score mathscore for students. We are interested in looking at the achievement as function of some of these.
+
+a. Create a new variable, named it as `meansses`, which is the mean
+school ses based on the students' ses at each school and add it to the
+data frame. (2 points)
+
+```{r,eval=TRUE}
+math = read.csv("Mathscores.csv")
+
+math <- math %>%
+  group_by(school) %>%
+  mutate(meansses = mean(ses)) %>%
+  ungroup() %>%
+  as.data.frame()
+
+head(math)
+```
+
+
+b. Specify a linear mixed effects model for score achievement with
+school mean ses (`meansses`), sector (`sector`), student's ses (`ses`),
+the interaction of student's ses with each school ses, and the
+interaction of student's ses with sector. Consider a model with random
+intercepts and random slope of student's ses. Fit such linear mixed
+effect model. (6 points; 4 points for specifying all the predictors in
+the model and 2 points for the R codes to fit the model)
+
+\
+
+
+
+```{r,warning=FALSE,eval=TRUE}
+sch_mod = lmer(mathscore~meansses+sector+ses+ses*meansses+ses*sector+1+(1+ses|school),data=math)
+summary(sch_mod)
+confint(sch_mod)
+```
+The model is noted as follows:
+
+$\text{mathscore} = 13.310 +  3.320\text{meansses} -1.195\text{sector} + 1.332\text{ses} + 0.847\text{ses}\times \text{meansses} + 1.578\text{ses}\times \text{sector}$
+
+
+c. Interpret the beta coefficients (hint: fixed effects) in the model.
+(3 points)
+
+Each subject will have their own intercept and slope estimated by school and ses score.
+
+- The coefficient for means ses of 3.3202 (95% CI: 2.5617 – 4.0795, p<0.001) represents an increase in math score achievement for each subject by a one level increase of their school's mean ses socioeconomic level.
+- The coefficient for sector of -1.1950 (95% CI: -1.7960 – -0.5938, p<0.001) represents an decrease in math score achievement for each subject given their status as public sector. 
+- The coefficient for ses of 1.3322 (95% CI: 1.0104 – 1.6552, p<0.001) represents an increase in math score achievement for each subject by a one level increase of their ses socioeconomic level. 
+- The coefficient for the interaction between mean ses and student ses of 0.8465 (95% CI: 0.3089 – 1.3774, p=0.001856) represents that for each one level increase in their school's mean ses socioeconomic level, the effect of the student’s individual ses socioeconomic level on their math score achievement increases by 0.8465 points.
+- The coefficient for the interaction between sector and student ses of 1.5781 (95% CI: 1.1372 – 2.0168, p<0.001) represents that for students in the public sector, the effect of the student’s individual ses socioeconomic level on their math score achievement increases by 1.5781 points.
+
+
+\
+

@@ -1,0 +1,305 @@
+---
+title: "Assignment 1 Solution"
+author: "Claire Ali"
+date: "1/21/2025"
+output:
+  pdf_document: default
+  html_document: default
+subtitle: 'Data 621: Advanced Statistical Modeling'
+---
+
+****
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warn=-1, message=FALSE)
+pack <- c("knitr", "rmarkdown", "knitcitations", "pander")
+
+new.packages <- pack[!(pack %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+lapply(pack, require, character.only = TRUE)
+```
+
+```{css, echo=FALSE}
+.blackbox {
+  padding: 1em;
+  background: #EFFAFE;
+  color: black;
+  border: 1px solid grey;
+  border-radius: 10px;
+}
+
+.center {
+  text-align: center;
+}
+```
+
+
+### Questions:
+
+#### 1. A company that manufactures light bulbs claims that a particular type of light bulb will last 850 hours on average with standard deviation of 45. A consumer protection group thinks that the manufacturer has overestimated the lifespan of their light bulbs by about 30 hours. The group randomly selected 18 bulbs to test their hypothesis that the mean lifespan is not 850 hours. 
+
+a) Which hypothesis test should they perform? (1 point)
+
+To test the light bulb efficacy, a one sided t-test should be performed. 
+
+b) What is the power? Please report the power as a percentage with no decimal places. (6 points)
+
+Using a one variable t-test, the resultant hypotheses and means are as follows:
+
+$H_{o}\geq850$: The light bulb lifespan is at least 850 hours.
+
+$H_{A}<850$: The light bulb lifespan is less than 850 hours.
+
+$\mu_{o}=850$
+
+$\mu_{A}=820$
+
+The rejection criteria can be found by first finding t from the chart, provided in the DATA 621 lecture notes. Using a df of 17, and an $\alpha$ of 0.95, the resultant t is 1.740. We are looking at the lower half of the distribution; as such we will use -1.740, which will be used to calculate the critical x value as follows:
+
+\begin{align*}
+t_{n-1,1-\alpha} &= \frac{\bar{x}_{\text{crit}} - \mu_{o}}{s/\sqrt{n}} \\
+-1.740 &= \frac{\bar{x}_{\text{crit}} - 850}{45/\sqrt{18}} \\
+\bar{x}_{\text{crit}} &= 831.5445
+\end{align*}
+
+
+The critical value is 831.54, meaning that if a mean bulb lifespan of 831.54 or less is found, we will reject the null hypothesis. We can now calculate the power of the distribution.
+
+\begin{align*}
+t_{n-1,1-\beta}=\frac{\bar{x_{crit}}-\mu_{A}}{s/\sqrt(n)} \\
+t_{n-1,1-\beta}=\frac{\bar{831.5445}-820}{45/\sqrt(18)} \\
+t_{n-1,1-\beta}=  0.1456\\
+P(t_{17}<0.1456|H_{A})
+\end{align*}
+
+The t-value for our power calculation is 0.1456; from the chart, we see that this value yields a resultant power between 55% and 65%. To avoid overestimation, the power via the table can be noted as 55% power.
+
+
+c) Do you think they have enough power to make their point? (1 point)
+
+The resultant power indicates that the point is unlikely to be made. With a 55% power, there is a 45% chance that a Type II error will be made, which is fairly high.
+
+
+:::: {.blackbox}
+
+::::
+  
+<br> 
+
+#### 2.	A company that manufactures light bulbs claims that a particular type of light bulb will last 850 hours on average with standard deviation of 45.  A consumer protection group thinks that the manufacturer has overestimated the lifespan of their light bulbs by about 30 hours. At least how many light bulbs does the consumer protection group have to test their hypothesis that the mean lifespan is not 850 hours in order to make their point with reasonable confidence (90% power)? (3 points)
+
+
+Using the same values from Question 1, to achieve 90% power, the corresponding sample size can be calculated as follows:
+
+\begin{align*}
+n = \frac{(Z_{1-\alpha}+Z_{1-\beta})^2*s^2}{(\mu_{A}-\mu_{o})^2}\\
+n = \frac{(1.645+1.645)^2*45^2}{(830-850)^2}\\
+n = 54.79701
+\end{align*}
+
+The calculated sample size corresponding to 90% power equals 54.8, meaning that to make their point with reasonable confidence, a sample size of at least 55 light bulbs are needed for testing.
+
+
+:::: {.blackbox}
+
+
+::::
+  
+<br> 
+
+
+#### 3. A researcher wants to assess if the average age when women first marry has increased from 1960 to 1990 ($µ_x=$average age of first marriage for women in 1990 and $µ_y=$average age of first marriage for women in 1960). A random sample of 10 women married in 1990 showed an average age at marriage of 24.95 years, with a sample standard deviation of 2 years. A random sample of 20 women married in 1960 showed an average age at marriage of 23.1 years, with a sample standard deviation of 1.5 years. Assuming that age of first marriage for women is normally distributed, and the population variances are equal, the researcher conducted a hypothesis test, resulting a test statistic $t=2.8483$. 
+
+Please answer the following questions: 
+
+a) What test did the researcher use? (1 point) 
+
+The researcher used a two sample t-test to assess any differences in marriage ages for women in 1990 vs. 1960.
+
+b) What are the appropriate null and alternative hypotheses? (1 point) 
+
+The appropriate null and alternative hypotheses for the trial are as follows:
+
+$H_{o}:\mu_{x}=\mu_{y}$: The average mean marriage ages in 1990 and 1960 are equal.
+
+$H_{A}:\mu_{x}\neq\mu_{y}$: The average mean marriage ages in 1990 and 1960 are not equal.
+
+
+
+c) What is the degree of freedom for this test? And how is it calculated? (1 point) 
+
+Degrees of freedom (df) are calculated by subtracting 1 from n, the sample size for the test. For this test, the df calculations can be noted as follows:
+
+$df_x=n_x-1=10-1=9$
+\\
+
+$df_y=n_y-1=20-1=19$
+
+To not overestimate the smaller sample, we will use the df corresponding to the smallest sample size. As such, the df used in any subsequent calculations will be 9.
+
+d) What is the value of your point estimate? (1 point)
+
+The point estimate is the difference between the two sample means, which can be calculated as $\bar\mu_x-\bar\mu_y = 24.95-23.1=1.85$ years. As such, the point estimate for the trial is 1.85 years.
+
+e) Based on your null and alternative hypothesis, what is your p-value? Please interpret the p-value. For a significance level of $\alpha = 0.05$, are the results statistically significant? (3 points) 
+
+The given t-statistic for this trial was given as 2.8483, with a df of 9. From the table of p-values[1], this parameter is between 0.01 and 0.009. To not overestimate, we will use the larger p-value of 0.01.
+
+At the significance level, $\alpha = 0.05$, the full range of potential p-values falls below this level. As such, we can conclude that the results are statistically significant. As such, we reject the null hypothesis and agree that the difference in sample means is too unlikely to have happened by chance alone, meaning the average age of marriage has likely changed from 1960 to 1990.
+
+
+f) What is the 95% confidence interval for the point estimate? Interpret it? How is it comparable to your result using p-value? (3 points)
+
+As given by the summary statistics table below, the 95% confidence interval for the point estimate is (0.5195,3.1805), representing the difference in means between 1990 and 1960. All the values contained within this interval are positive, and zero is not contained within the interval. As such, we can conclude with a fairly strong degree of certainty that the average age of marriage did change between 1990 and 1960. This agrees with our resultant p-value, which found that the difference in sample means is too unlikely to have happened by chance alone. Both of these tests support the test result that the marriage age has changed between 1960 and 1990.
+
+
+```{r}
+# Load knitr package for creating tables
+library(knitr)
+
+# Create the data frame
+data <- data.frame(
+  Group = c("x", "y", "Combined", "Difference"),
+  Obs = c(10, 20, 30, ""),
+  Mean = c("24.95", "23.1", "23.71667", "1.85"),
+  `Std_Error` = c(0.6324555, 0.3354102, 0.3416772, 0.6495191),
+  `Std_Dev` = c("2", "1.5", "1.871443", "0.5195205"),
+  `Conf_Interval_95p` = c("[23.51929, 26.38071]", "[22.39798, 23.80202]", "[23.01786, 24.41547]", "[0.5195205, 3.180479]")
+)
+
+# Display the table
+kable(data, caption = "Summary Statistics for Groups x and y", align = "l", col.names = c("Group", "N Obs", "Mean", "Std Error", "Std Dev", "95% CI"))
+```
+
+
+:::: {.blackbox}
+
+
+::::
+
+<br> 
+
+#### 4. A pre-med student in a statistics class is required to do a class project. She claims the mean body temperature is less than 98.6°F, so she plans to collect her own sample data to test this claim. Because of time constraints, she only collects data from 12 people who are randomly selected by careful planning. The sample data are shown below. Using a 0.05 significance level please perform the test for her. (5 points)
+
+98.0,  97.5,  98.6,  98.8,  98.0,  98.5,  98.6,  99.4,  98.4,  98.7,  98.6,  97.6 
+
+**Please answer this question using hand calculations, following the 5 steps for hypotheses testing**: 1) write your null and alternative hypotheses, 2) define your significance level, 3) calculate test statistic assuming H0 is true, 4) describe the sampling distribution of test statistic if H0 is true, and 5) generate p-value and draw conclusions. 
+
+1. Hypotheses
+
+The null and alternative hypotheses can be found as follows: 
+
+$H_{o}\geq98.6$: The mean body temperature is at least 98.6 degrees F.
+
+$H_{A}<98.6$: The mean body temperature is less than 98.6 degrees F.
+
+2. Significance Level
+
+The significance level for this trial is given as $\alpha = 0.05$. This represents the probability of making a type I error and rejecting the null hypothesis if the mean body temperature is at least 98.6 degrees F.
+
+3. Test Statistic
+
+The sample size of the trial is 12, giving us a df of 11. At a confidence level of 95%, the table, provided in the DATA 621 lecture notes, yields a test statistic with an absolute value of $t=1.796$, assuming the null hypothesis is true.
+
+4. Sampling Distribution
+
+Under the null hypothesis, the sampling distribution of t will be approximately normal and centered around 98.6.
+
+5. P-Value and Conclusions
+
+With a t-statistic of 1.796 and a df=11, the p-value can be found via a t-table [1]. At these parameters, the p-value falls between 0.051 and 0.050. In the interest of not overestimating the significance, we will use the larger value. We find that the p-value for the trial is 0.051, meaning that while close, we fail to reject the null hypothesis at the chosen significance level. Therefore, we cannot conclude that a sample mean less than 98.6 couldn't have occurred purely by chance. 
+
+:::: {.blackbox}
+
+
+::::
+
+<br> 
+
+#### 5. What is the statistical power of the test in Q4? (5 points)
+
+\\
+To find the statistical power of the test, the sample mean and standard deviation are needed. The calculation of these parameters will be done in R; all remaining calculations will be performed by hand. 
+
+```{r,eval=TRUE,echo=TRUE}
+sample = c(98.0,  97.5,  98.6,  98.8,  98.0,  98.5,  98.6,  99.4,  98.4,  98.7,  98.6,  97.6 )
+mean(sample)
+sd(sample)
+```
+
+Using a one variable t-test, the resultant hypotheses and means are as follows:
+
+$H_{o}\geq 98.6$: The mean body temperature is at least 98.6 degrees F.
+
+$H_{A}<98.6$: The mean body temperature is less than 98.6 degrees F.
+
+$\mu_{o}=98.6$
+$\mu_{A}=98.39167$
+
+\\
+The rejection criteria can be found by first using t, which was found in question (4) to be 1.796. We are looking at the lower half of the distribution; as such we will use -1.796, which will be used to calculate the critical x value as follows:
+
+
+\begin{align*}
+t_{n-1,1-\alpha} &= \frac{\bar{x}_{\text{crit}} - \mu_{o}}{s/\sqrt{n}} \\
+-1.796 &= \frac{\bar{x}_{\text{crit}} - 98.6}{0.5350588/\sqrt{12}} \\
+\bar{x}_{\text{crit}} &= 98.3226
+\end{align*}
+
+
+The critical value is 98.3226, meaning that if a mean temperature of 98.3226 or less is found, we will reject the null hypothesis. We can now calculate the power of the distribution.
+
+
+
+\begin{align*}
+t_{n-1,1-\beta}=\frac{\bar{x_{crit}}-\mu_{A}}{s/\sqrt(n)} \\
+t_{n-1,1-\beta}=\frac{\bar{98.3226}-98.39167}{0.5350588/\sqrt(12)} \\
+t_{n-1,1-\beta}=  0.4472\\
+P(t_{17}<0.4472|H_{A})
+\end{align*}
+
+The t-value for our power calculation is 0.4472; from the chart, we see that this value yields a resultant power between 65% and 75%. To avoid overestimation, the power via the table can be noted as 65% power.
+
+:::: {.blackbox}
+
+
+::::
+
+<br>
+
+#### 6. Assuming that you plan to construct a $(1-\alpha)\%$ confidence interval for the population mean, use the given data to determine whether the margin of error should be calculated using a critical value of $z_{1-\alpha/2}$ from the standard normal distribution, a critical value of $t_{1-\alpha/2}$, or neither. (5 points)
+
+
+a) $n=150$, $\bar{x}=100$, $s=15$, and the population distribution is skewed.
+
+For this scenario, $t_{1-\alpha/2}$ should be used. The sample standard deviation is known, indicating a t-test. While the data is skewed, the sample size is large enough to infer that the sampling distributions will converge to normal via the central limit theorem.
+
+b) $n=8$, $\bar{x}=100$, $s=15$, and the population distribution is normal.
+
+For this scenario, $t_{1-\alpha/2}$ should be used. The sample standard deviation is known, indicating a t-test, and the distribution is normal, meeting the normality assumption.
+
+
+c) $n=8$, $\bar{x}=100$, $s=15$, and the population distribution is highly skewed.
+
+For this scenario, neither should be used. The sample standard deviation is known, indicating a t-test. However, the data is highly skewed and the sample size is not large enough to ensure that the resultant sampling distribution will converge to normal.
+
+d) $n=150$, $\bar{x}=100$, $\sigma=15$, and the population distribution is highly skewed.
+
+For this scenario, $z_{1-\alpha/2}$ should be used as the standard deviation of the population is known and the sample size is large enough to infer that the sampling distributions will converge to normal via the central limit theorem.
+
+e) $n=8$, $\bar{x}=100$, $\sigma=15$, and the population distribution is highly skewed.
+
+For this scenario, neither should be used. The standard deviation of the population is known , which would correspond to a z-test; however, the sample size is too small to infer that the sampling distributions will converge to normal via the central limit theorem.
+
+:::: {.blackbox}
+
+
+::::
+
+<br>
+
+#### References
+\\
+
+[1] https://math.arizona.edu/~piegorsch/571A/TR194.pdf
+

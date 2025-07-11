@@ -1,0 +1,280 @@
+--- 
+title: "DATA 621 Assignment 4"
+author: "Claire Ali"
+date: "Tuesday, 25th February, 2025"
+output: pdf_document
+---
+
+
+# Assignment 4
+
+### Data 621: Advanced Statistical Modeling 
+
+
+------------------------------------------------------------------------
+
+```{r,include=FALSE}
+library(tidyverse)
+library(skimr)
+library(brant) 
+library(gofcat)
+library(MASS)
+library(ordinal)
+library(AER)
+library(glue)
+library(gtsummary)
+library(formatR)
+library(carData)
+library(tidyr)
+
+```
+
+
+
+### Questions:
+
+
+#### 1. Which is more restrictive regarding assumptions, an ordinal logistic model or a multinomial model? Why? (2 points; 1 point for the choice and 1 point for explanation)
+
+\
+
+When considering assumptions, ordinal logistic models have more stringent restrictions. The main assumption of multinomial modelling is that the relative probabilities of outcome categories are independent. In contrast, ordinal models have several primary assumptions. Firstly, the response variable must be ordinal, having a clear ordering or hierarchy. Secondly, each outcome category must have proportional odds, meaning that at every split of the ordinal outcome, the model's independent variables must yield an identical effect. Both models have similar assumptions for no multicollinearity; however, the requirement of proportional odds makes ordinal regression more restrictive.
+
+
+
+#### 2. Using the "Heartattackdanger.csv" file check for factors associated with the danger of having a heart attack which is classified as "High", "Med" and "Low". Participants' age in years, height in cm, and sex ("F/M"). Use all the variables in the data. Check model adequacy, interpret and plot the predicted probabilities of each of the 3 possible outcomes as a function of age. There is no reason to believe there are any interactions. (20 points)
+
+a. Write a short paragraph to describe the dataset including a table of
+descriptive statistics of the participant characteristics by heart
+attack classifications. Please use appropriate descriptive statistics to
+describe the variables, e.g., mean and sd for age. (6 points; 1 point
+for the description in a sentence and 5 points for the table)
+
+```{r,eval=TRUE}
+heart = read.csv("Heartattackdanger.csv")
+
+tbl_summary(
+  heart,
+  by = cvdanger, # split table by group
+  statistic = list(
+    all_continuous() ~ "{mean} ({sd})",
+    all_categorical() ~ "{n} ({p}%)"), 
+  missing = "ifany" # only display if any NA values
+) %>%
+  modify_header(label = "**Variable**") %>% # update the column header
+  bold_labels() 
+```
+
+
+\
+
+From the table we find that there are 123 individuals in the dataset who are deemed "High Risk". Of these, 64 are female (52%) and 59 are male (48%). The mean age for this group is 45 with a standard deviation of 7 years; the mean height for this group is 169 cm, with a standard deviation of 11 cm. There are 109 individuals in the dataset who are deemed "Low Risk". Of these, 48 are female (44%) and 61 are male (56%). The mean age for this group is 29 with a standard deviation of 9 years; the mean height for this group is 164 cm, with a standard deviation of 10 cm.There are 116 individuals in the dataset who are deemed "Medium Risk". Of these, 56 are female (48%) and 60 are male (52%). The mean age for this group is 35 with a standard deviation of 10 years; the mean height for this group is 167 cm, with a standard deviation of 9 cm.
+
+
+b. Which model you will choose to answer the question of this study,
+multinomial or ordinal logistic regression? Please explain your choice.
+(2 points; 1 point for the choice and 1 point for explanation)
+
+For further analysis, I will use ordinal logistic regression. The outcome variable for risk level is ordinal, with a clear hierarchy, increasing from low to medium to high risk, making the regression method a suitable choice.
+
+c. Please create a model to check for factors associated with the danger
+of having a heart attack. Please do assumption check if needed. Hint:
+Make sure the order of the outcome variable is clearly defined. This is
+important for model interpretation. (4 points)
+
+We will fit the model and then check assumptions to verify our selection. We will use an alpha level of 0.05 for our assumption testing and any further tests of significance.
+
+```{r,eval=TRUE}
+# reordering outcome variable
+heart$cvdanger <- ordered(heart$cvdanger,levels=c("Low","Med","High"))
+
+# Fitting the model
+ord_cv <- polr(cvdanger~age+height+sex, data = heart)
+summary(ord_cv)
+
+# checking assumptions
+brant(ord_cv)
+vif(ord_cv)
+```
+\
+
+From the Brant test, we find that all variables have a p-value greater than 0.05; thus, we fail to reject the null hypothesis that the parallel regression assumption holds. From the VIF test, all variables yield a value very close to one, indicating we have met the assumption for no multicollinearity. Thus, we meet our proportional odds and no multicollinearity assumption and conclude the model is a good fit.
+
+d. Interpret the model output with OR, 95% CI and p-value for each
+variable. Keep 3 digits for the model output and clarify the
+significance level. (4 points)
+
+As stated prior, all models will be evaluated at a significance level of 0.05.
+
+```{r,eval=TRUE}
+coeftest(ord_cv)
+exp(coef(ord_cv))
+exp(confint(ord_cv))
+```
+
+- The odds ratio for one unit decrease in age of people who are designated "Low" or "Medium" risk for a heart attack versus those who are deemed "High" risk is 1.056 (95% CI: 1.116, 1.171; p-value<0.05)
+- The odds ratio for one cm decrease in the height of people who are designated "Low" or "Medium" risk for a heart attack versus those who are deemed "High" risk is 1.062 (95% CI: 1.038, 1.088; p-value<0.05)
+- A female individual, in contrast to a male individual, is associated with a higher odds of being designated "Low" or "Medium" risk for a heart attack versus those who are deemed "High" risk with an odds ratio of 1.008 (95% CI: 0.458, 1.091; p-value=0.1187)
+- The intercept of 13.559 for "Low|Med" corresponds to the log odds of people who are designated "Low" or "Medium" risk for a heart attack versus those who are deemed "High" risk when an individual is female, with a height and age equal to zero (p-value<0.05)
+- The intercept of 15.658 for "Med|High" corresponds to the log odds of people who are designated "Medium" or "High" risk for a heart attack versus those who are deemed "Low" risk when an individual is female, with a height and age equal to zero (p-value<0.05)
+
+
+e. One cm change in height is not clinical relevant. Standardize the
+height variable using the `scale` function in R, then fit the model with
+the new height variable and interpret the output of the new variable. (4
+points)
+
+```{r,eval=TRUE}
+# scaling
+heart$height <- scale(heart$height)
+
+# fitting
+ord_cv_new <- polr(cvdanger~age+height+sex, data = heart)
+coeftest(ord_cv_new)
+exp(coef(ord_cv_new))
+exp(confint(ord_cv_new))
+```
+
+The odds ratio for a clinically relevant unit decrease in the height of people who are designated "Low" or "Medium" risk for a heart attack versus those who are deemed "High" risk is 1.825 (95% CI: 1.450, 2.319; p-value<0.05).
+
+
+#### 3. Using the file "happiness.csv" from a hypothetical study on quality of life as a measure of happiness, which asked how happy are you? With answers ("not", "pretty", "very")-happy. The study also collected income, recorded sex of respondent and if they believed in "heaven" (as a measure of spirituality). A researcher would like to study whether income may affect males and females differently and consider the "heaven" variable as a confounder. He wants to use an ordinal logistic regression model for this study. Please answer the following questions. (12 points)
+
+a. To model the data with an ordinal logistic model, do you think the
+researcher needs to reshape the "happiness.csv" dataset? If so, please
+write out the R codes to reshape the dataset. If not, please explain how
+he can model the data in R. (2 points) Hint: Think about how to deal
+with the "count" variable. There were in total 1379 responses in this
+study.
+
+```{r,eval=TRUE}
+happyW = read.csv("happiness.csv")
+head(happyW)
+summary(happyW)
+```
+As we can see, the data is condensed, with an additional variable denoting the counts of each combination of predictors. Thus, the original dataset, which contained total 1379 responses, is reduced to a frequency table with 21 rows. If used as is, we will not be able to accurately reflect the impact of each predictor when modeled. As such, we must reshape the dataset to use a regression model.
+
+```{r,eval=TRUE}
+# reshaping data
+happyl = uncount(happyW, weights=count)
+head(happyl)
+summary(happyl)
+
+# note: could have also used the `expand.dft` function in the `vcdExtra` package
+```
+
+
+b. If the following is the model output from the ordinal logistic
+regression model, please answer:
+
+```{r,eval=TRUE}
+# checking model output
+happyl$happy <- factor(happyl$happy)
+hapMod = polr(formula = happy ~ heaven + sex * income, data = happyl)
+summary(hapMod)
+```
+
+
+
+-   What is the cumulative odds of a response of **"pretty happy" or
+    "very happy" vs "not happy"** among the individuals with `heaven` =
+    no, `sex` = female, and `income` = high? (1 point)
+  
+```{r,eval=TRUE}
+b = coeftest(hapMod)
+
+eqn = b[6]-0*b[1]-0*b[2]-0*b[3]-0*b[4]
+exp(eqn)
+```
+
+The cumulative odds of of a response of "pretty happy" or "very happy" vs "not happy" among female individuals with no belief in heaven and high income is 7.1815.
+    
+-   What is the cumulative odds of a response of **"very happy" vs "not
+    happy" or "pretty happy"** among the individuals with `heaven` = no,
+    `sex` = female, and `income` = high? (1 point)
+    
+```{r,eval=TRUE}
+eqn = b[5]-0*b[1]-0*b[2]-0*b[3]-0*b[4]
+exp(eqn)
+```
+
+The cumulative odds of of a response of "very happy" vs "not happy" or "pretty happy" among female individuals with no belief in heaven and high income is 0.2092.
+ 
+ 
+ 
+-   For those who believe in heaven and have high income, what is the
+    odds ratio of a happier response **(either "pretty happy" or "very
+    happy" vs "not happy" or "very happy" vs "not happy" or "pretty
+    happy")** by males vs females? (1 point)
+    
+```{r,eval=TRUE}
+# males
+eqnM = b[6]-1*b[1]-1*b[2]
+
+
+#females
+eqnF = b[6]-1*b[1]
+
+OR = exp(eqnM)/exp(eqnF)
+OR
+```
+ 
+For those who believe in heaven and have high income, the odds ratio of a happier response by males vs females is 0.2422.
+    
+-   For those who believe in heaven, what is the odds ratio of a happier
+    response by males with low income vs. females with high income? (1
+    point)
+    
+```{r,eval=TRUE}
+eqnM = b[6]-1*b[1]-1*b[2]-1*b[3]-1*b[4]
+
+eqnF = b[6]-1*b[1]
+
+OR = exp(eqnM)/exp(eqnF)
+OR
+```
+
+For those who believe in heaven,  the odds ratio of a happier response by males with low income vs. females with high income is 10.1081.
+    
+    
+-   Is the interaction term significant? Should he drop the interaction
+    term from the model? (1 point) Hint: You need to present the
+    p-value.
+    
+```{r,eval=TRUE}
+coeftest(hapMod)
+```
+
+The interaction term between sex and income yields a p-value <2e-16; at our 0.05 alpha level, we conclude that this interaction term is significant and should not be dropped from the model.    
+    
+-   Is the `heaven` variable significant? (1 point) Hint: You need to
+    present the p-value.
+    
+The heaven variable yields a p-value of 0.2195; at our 0.05 alpha level, we conclude that this interaction term is not significant. 
+    
+    
+-   Is `heaven` a confounder? Please use codes and output to explain. (4
+    points) Hint: Please use the rule for confounding that we learned in
+    Lecture 3.
+    
+```{r,eval=TRUE}
+# adjusted model
+summary(hapMod)
+
+# unadjusted model
+cr_hapMod = polr(formula = happy ~ sex * income, data = happyl)
+summary(cr_hapMod)
+
+# calculate difference of coefficients
+numerator <- coef(cr_hapMod)[1] - coef(hapMod)[2]
+denomiator <- coef(hapMod)[2]
+diff <- numerator/denomiator
+paste0("magnitude of confounding with sex: ",round(diff*100,3), "%")
+
+numerator <- coef(cr_hapMod)[2] - coef(hapMod)[3]
+denomiator <- coef(hapMod)[3]
+diff <- numerator/denomiator
+paste0("magnitude of confounding with income: ",round(diff*100,3), "%")
+
+```
+We will designate an absolute difference between coefficients greater than 10% as evidence for confounding, via the rule of thumb. From the above outputs, we see that the calculated absolute difference in sex's beta coefficients between the two models is 1.633%, which is much smaller than the 10% threshold used for rule of thumb. Thus, we conclude that heaven is not a confounder with sex. Next, we see that the calculated absolute difference in income's beta coefficients between the two models is 16.499%, which is larger than the 10% threshold used for rule of thumb. Thus, we have evidence to conclude that heaven is a confounding variable and is associated with income in our model. 

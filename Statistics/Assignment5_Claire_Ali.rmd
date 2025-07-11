@@ -1,0 +1,277 @@
+--- 
+title: "DATA 621 Assignment 5"
+author: "Claire Ali"
+date: "Tuesday, 11th March, 2025"
+output: pdf_document
+---
+
+# Assignment 5 
+
+### Data 621: Advanced Statistical Modeling
+
+------------------------------------------------------------------------
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(readxl)
+```
+
+### Questions:
+
+#### 1. If [\(Y\)]{.math .inline} is a Poisson variable representing number of patients presenting at emergency department at a hospital in one 8-hour shift, and the [\(E(Y)=56\)]{.math .inline}. What is the mean number of patients we would see in 12 hours? (2 points)
+
+
+\
+
+```{r,eval=TRUE}
+# get patients per hour - E(Y)= 56 patients per 8 hours
+mu = 56/8
+
+# average number of patients in 12 hours
+y = 12
+
+Avg12 = mu*y
+Avg12
+```
+We would expect the mean number of patients in 12 hours to be 84 patients
+
+
+\
+
+#### 2. A study of hypertension begins with one thousand 40 to 45-year-old men in Jan. 1, 2019. All of the participants were disease-free at the time of enrollment. Of these, 50 developed hypertension in Jan. 2019. The remaining 950 are followed for another 5 months until Jun. 2019, during which time 64 develop hypertension. (Assume no loss to follow-up or death due to competing risk; 5 points)
+
+a. Calculate the point prevalence of hypertension on Jan. 31, 2019. (1
+point)
+
+```{r,eval=TRUE}
+pt_p = 50/1000
+pt_p
+```
+The point prevalence of hypertension on January 31, 2019 is 0.05.
+
+b. Calculate the period prevalence of hypertension from Jan. 2019 to
+Jun. 2019. (1 point)
+
+```{r,eval=TRUE}
+pr_p = (50+64)/1000
+pr_p
+```
+
+The period prevalence of hypertension from January to June 2019 is 0.114.
+
+
+c. Calculate the incidence proportion of hypertension from Feb. 2019 to
+Jun. 2019. (1 point)
+
+```{r,eval=TRUE}
+ip = 64/950
+ip
+```
+The incidence proportion of hypertension from February to June 2019 is 0.067368.
+
+d. Calculate the incidence rate of hypertension from Feb. 2019 to
+Jun. 2019. (3 points)
+
+```{r,eval=TRUE}
+# years
+y = 5/12
+
+# person years
+py = 950*y
+
+# incidence rate
+ir = 64/(py)
+ir
+```
+
+The incidence rate of hypertension from February to June 2019 is 0.161684.
+
+\
+
+#### 3. Suppose a new treatment is developed that prolongs life but does not result in a cure.
+
+a. How would this affect the incidence of the disease, explain? (2
+points; 1 point for how and 1 point for explanation)
+
+The incidence of the disease would not change significantly. Incidence is a measure of new cases within a time frame. With no cure, no cases would be "stopped" and the same amount or count trend of people would be noted. It may note slight changes attributed to the decreased "at risk" group (from the removal of people who already have the disease), but this would likely be a minor shift when considering the overall population.
+
+b. How would this affect the prevalence of the disease, explain? (2
+points; 1 point for how and 1 point for explanation)
+
+The prevalence of the disease would increase. The number of people getting the disease would likely not change, but the cure helps increase longevity. Thus, with similar infection trends and less people dying of the disease, the total number of people with the disease at one time will increase. 
+
+
+\
+
+#### 4. According to some trustworthy data source, in all of 1995-1999 (five-year period), there were 44,187 traffic fatalities reported in a country with a driving population of 78,905,357. During the same period, there of were a total 4376 billion kilometers traveled in roads in motor vehicles.
+
+a. Calculate the rate of traffic fatalities per 100,000 driver-years (2
+points)
+
+```{r,eval=TRUE}
+f = 44187
+pop = 78905357
+km = 4376*10^9
+
+# rate of fatalities
+r_dy = (f/pop)*100000
+r_dy
+```
+The rate of traffic fatalities is 56 fatalities per 100,000 driver-years.
+
+
+b. Calculate the rate of traffic fatalities per 100 million kilometers
+driven (2 points)
+
+```{r,eval=TRUE}
+r_km = (f/km)*(10^6)
+r_km
+```
+The rate of traffic fatalities is 0.01009758 fatalities per 100 million kilometers driven.
+
+c. Which, the rate of traffic fatalities per 100,000 driver-years or the
+rate of traffic fatalities per 100 million kilometers driven, is more
+informative and why? (2 points)
+
+The rate of traffic fatalities per 100 million kilometers is more informative than per 100,000 driver-years. While the driving population is given, this may not accurately reflect the amount of time or mileage that each person actually drives. A person may have the ability to drive, but choose not to do so, or in a limited capacity. By assessing on a kilometers-driven basis, we account only for time spent on the road as traffic fatalities will only happen when driving.
+
+\
+
+#### 5. Dataset `arrestsfoot.csv` lists total attendance (in thousands) and the total number of arrests in the 1987--1988 season for soccer teams in the Second Division of the British football league (Data from Agresti's book). Let [\(Y=\)]{.math .inline} number of arrests for a team, and let [\(t =\)]{.math .inline} total attendance. Assuming Poisson distribution, fit the model and commnet on the model (Hint: Check the link you use in R and comment on the intercept). (5 points)
+
+
+\
+
+```{r,eval=TRUE}
+arr = read.csv("arrestsfoot.csv")
+arr$attn = log(arr$Attendance..Thousands.)
+
+arr_model1 <- glm(Arrests ~ Team + offset(attn),family  = poisson(link = "log"), data = arr)
+summary(arr_model1)
+
+arr_model2 <- glm(Arrests ~ Team + offset(attn),family  = poisson(link = "identity"), data = arr)
+summary(arr_model2)
+
+arr_model3 <- glm(Arrests ~ Team + offset(attn),family  = poisson(link = "sqrt"), data = arr)
+summary(arr_model3)
+
+#confint(arr_model)
+```
+
+
+
+We will assess significance at an alpha level of 0.001 for this exploration.
+
+The estimated log for the number of arrests per person in attendance when the team is Aston Villa is -0.12595 (95% CI:-0.2909385, 0.03042442, p-value<0.001). This variable is significant. 
+
+After fitting three poisson models with differing link functions, we find that the optimal model uses a "log" link. The intercept for this model is the closest to zero when evaluating the predicted intercept for arrests. With no attendance, the number of arrests should be zero. When the intercept of log model is exponentiated, we find that the expected number of arrests is approximately 0.8816589 when nobody is in attendance. 
+
+\
+
+#### 6. The table in `coronarysmoke.xlsx`, based on a study with British doctors conducted by R. Doll and a. Bradford Hill, was analyzed by N. R. Breslow in A Celebration of Statistics, Berlin: Springer, 1985.
+
+a. For each age, compute the sample coronary death rates per 1000
+person-years, for nonsmokers and smokers. To compare them, calculate the
+risk ratio between smokers and nonsmokers and describe its dependence on
+age. (3 points)
+
+```{r}
+#preprocessing
+smoke = read_excel("coronarysmoke.xlsx")
+
+colnames(smoke)[1] <- "Age"
+colnames(smoke)[2] <- "smokeNo_PY"
+colnames(smoke)[3] <- "smokeYes_PY"
+colnames(smoke)[4] <- "smokeNo_CD"
+colnames(smoke)[5] <- "smokeYes_CD"
+smoke = smoke[-1,]
+smoke$smokeYes_CD <- as.numeric(smoke$smokeYes_CD)
+smoke$smokeYes_PY <- as.numeric(smoke$smokeYes_PY)
+smoke$smokeNo_CD <- as.numeric(smoke$smokeNo_CD)
+smoke$smokeNo_PY <- as.numeric(smoke$smokeNo_PY)
+head(smoke)
+```
+```{r,eval=TRUE}
+for (row in smoke){
+  smokeYes_DR = (smoke$smokeYes_CD/smoke$smokeYes_PY)*1000
+  smokeNo_DR = (smoke$smokeNo_CD/smoke$smokeNo_PY)*1000
+  RR = smokeYes_DR/smokeNo_DR
+}
+
+print(paste0("The risk rate for smokers with ages ", smoke$Age," is ",round(smokeYes_DR,6), " and ",round(smokeNo_DR,6)," for nonsmokers."))
+print(paste0("The risk ratio between smokers and nonsmokers for ages ", smoke$Age," is ",round(RR,6)))
+```
+
+* The risk rate for smokers with ages 35--44 is 0.610605 and 0.106423 for nonsmokers. The risk ratio between smokers and nonsmokers for ages 35--44 indicates that if you died of coronary heart disease in this sample, it is 5.737554 times more likely that you were a smoker
+
+* The risk rate for smokers with ages 45-54 is 2.404735 and 1.124332 for nonsmokers. The risk ratio between smokers and nonsmokers for ages 45-54 indicates that if you died of coronary heart disease in this sample, it is 2.138812 times more likely that you were a smoker
+
+* The risk rate for smokers with ages 55-64 is 7.199776 and 4.903678 for nonsmokers. The risk ratio between smokers and nonsmokers for ages 55-64 indicates that if you died of coronary heart disease in this sample, it is 1.46824 times more likely that you were a smoker
+
+* The risk rate for smokers with ages 65-74 is 14.688462 and 10.831721 for nonsmokers. The risk ratio between smokers and nonsmokers for ages 65-74 indicates that if you died of coronary heart disease in this sample, it is 1.35606 times more likely that you were a smoker
+
+* The risk rate for smokers with ages 75-84 is 19.18375 and 21.20383 for nonsmokers. The risk ratio between smokers and nonsmokers for ages 75-84 indicates that if you died of coronary heart disease in this sample, you were at 9.0473% less of risk than if you were a smoker.
+
+
+As age increases, the risk ratio decreases. This indicates that for coronary deaths, the difference between death rates for smokers and nonsmokers gets less pronounced as people get older. If you died of coronary heart disease at a younger age, the likelihood that you were a smoker is much higher than if you died of coronary heart disease at an older age. This indicates that the effect of smoking tends to have less significance on coronary deaths as age increases.
+
+
+b. Specify a main-effects Poisson model for the log rates having four
+parameters for age and one for smoking. Explain why this model assumes a
+constant ratio of nonsmokers' to smokers' coronary death rates over
+levels of age. Based on (6.A), would you expect this model to be
+appropriate? (3 points)
+
+```{r,eval=TRUE}
+df <- smoke[c("Age", "smokeYes_CD","smokeNo_CD")]
+smokeNew <- df %>%
+  pivot_longer(cols = c("smokeNo_CD", "smokeYes_CD"), 
+               names_to = "Smoke", 
+               values_to = "CoronaryDeaths") %>%
+  mutate(Smoke = dplyr::recode(Smoke, 
+                                "smokeNo_CD" = 0, 
+                                "smokeYes_CD" = 1))
+
+model = glm(CoronaryDeaths ~ Age + Smoke, family = poisson(link = "log"), data = smokeNew)
+summary(model)
+```
+This model assumes a constant ratio of nonsmokers' to smokers' coronary death rates over levels of age as it denotes purely whether or not a person was noted to be a smoker or not. There is no consideration for person-years, as such, the rates are assumed equal where they would be weighted in reality. For instance, the risk ratio between smokers and nonsmokers for ages 35--44 indicates that if you died of coronary heart disease in this sample, it is 5.737554 times more likely to have been a smoker. These weights would not be covered by the model. As such, the above model may not have full suitability.
+
+
+c. Based on (6.A), explain why it is sensible to add a quantitative
+interaction of age and smoking at 10% significance level. Specify this
+model, and show that the log of the ratio of coronary death rates
+changes linearly with age. (4 points)
+
+A distinct pattern was noted between age group and risk ratio between smokers and nonsmokers. An increase in the age resulted in a notable decrease in the risk ratio. As such, it is highly likely that there maybe an interaction between smoking and age when modelling this relationship.
+
+```{r,eval=TRUE}
+model = glm(CoronaryDeaths ~ Age * Smoke, family = poisson(link = "log"), data = smokeNew)
+summary(model)
+```
+
+
+```{r,eval=TRUE}
+smoke$Age_mid[smoke$Age=="35--44"] <- 40
+smoke$Age_mid[smoke$Age=="45-54"] <- 50
+smoke$Age_mid[smoke$Age=="55-64"] <- 60
+smoke$Age_mid[smoke$Age=="65-74"] <- 70
+smoke$Age_mid[smoke$Age=="75-84"] <- 80
+
+# death rate for smokers
+plot(smoke$Age_mid, log(smokeYes_DR), ylab="log(Smoking rate)", xlab="Age")
+
+# death rate for nonsmokers
+plot(smoke$Age_mid, log(smokeNo_DR), ylab="log(Nonsmoking rate)", xlab="Age")
+
+```
+
+
+When modelling the log rates of smoking and nonsmoking deaths versus age, both yield a fairly linear trend.
+
+\
+

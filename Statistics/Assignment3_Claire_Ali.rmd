@@ -1,0 +1,450 @@
+--- 
+title: "DATA 621 Assignment 3"
+author: "Claire Ali"
+date: "Tuesday, 4th February, 2025"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+------------------------------------------------------------------------
+
+```{r,include=FALSE}
+library(tidyverse)
+library(skimr)
+library(lmtest)
+library(ggpubr)
+library(broom)
+library(ggfortify)
+library(GGally)
+library(car)
+library(WebPower)
+```
+
+
+### Questions:
+
+#### 1. Stress is usually measured with a tool which gives an output called stressvar. A researcher wants to evaluate an association between this variable and a new tool that also measure stress (stressvar3). Use the "Patient_Sample.csv" to do this and interpret. This dataset does not contain patient identifier. Each row represents the data variables for an unique patient. A p-value less than 0.05 is considered statistically significant. Please follow the steps below to obtain the regression equation and interpret the meaning of estimated slope. (18 points)
+
+a. Write a short paragraph to describe the dataset including some
+descriptive statistics and at least one scatterplot between "stressvar"
+and "stressvar3" (2 points).
+
+```{r,eval=TRUE}
+sample = read.csv("Patient_Sample.csv")
+
+# visual of dataset
+head(sample)
+
+# summary of features
+summary(sample)
+
+# proportions of categorical variables
+i = 1
+while (i<5){
+  freq = table(sample[i])
+  l = prop.table(freq)
+  print(l)
+  i = i+1
+}
+
+# scatterplot of stressvar and stressvar3
+ggplot(sample, aes(x = stressvar, y = stressvar3)) +
+geom_point() +
+stat_smooth(se = FALSE)
+
+
+```
+
+There are 6 features in the sample dataset. Two features, stressvar and stressvar3, are continuous variables. These variables have fairly similar ranges, having minimums of 55.34 and 60.5, respectively, and maximums of 152.58 and 158.13, respectively. Both stressvar and stressvar3 have means and medians that are nearly equal, suggesting that the data for these variables likely has a symmetric distribution. Stressvar3 has slightly higher values for the mean and median, of 109.66 and 108.91, compared to stressvar, which has values of 102.64 and 102.96, respectively. The scatterplot between these values yields a strong, linear relationship, with a roughly equal amount of points distributed above and below the line of best fit. The remaining four variables are categorical. For smoking, 77.83% of the distribution are not smokers and 22.17% are. 80% of individuals in the sample are not obese and 20% are. For cholesterol, 35.65% of the distribution have high cholesterol, while 64.35% have normal values. Blood pressure has three categories: hypertension, hypotension, and normal, which have proportion splits of 28.26%, 13.48%, and 58.26%, respectively.
+
+
+b. Write the statistical method in words and using math equations if
+appropriate to evaluate the association between "stressvar" and
+"stressvar3", adjusted for the blood pressure "bp" variables (1 point).
+
+To assess associations, we will begin by fitting a linear regression model on the following equation:
+
+\
+
+$\hat{y_{stressvar3}} = \hat{\beta}_0 + \hat{\beta}_1 * x_{stressvar}+ \hat{\beta}_2 * x_{bp}$
+
+\
+
+We will then test the significance of coefficients using a t-test, with an alpha level of 0.05. Our null hypotheses will be that the coefficients of stressvar and blood pressure have no effect on the model. If we are able to reject, using the p-value for each coefficient, we can conclude that the variable effect is significant. We will then check the validity of our assumptions, verifying that the model is linear, independent, normal, and has equal variance.
+
+
+
+c. Run the analysis described in 2B (4 points). Hint: Please check all
+model assumptions.
+
+The model will be fit and undergo t-testing as follows:
+
+```{r,eval=TRUE}
+# Fitting the model
+model=lm(stressvar3~stressvar+bp,data=sample)
+summary(model)
+```
+From the individual t-tests, we find that blood pressure is not a significant predictor in our model, at the 0.05 significance level. Next, we will check assumptions of the model.
+
+```{r,eval=TRUE}
+# checking assumptions
+autoplot(model)
+
+# secondary independence check
+durbinWatsonTest(model)
+```
+From the above figure, we can likely confirm our linearity assumption from the graph of residuals v. fitted values. There is no pattern and points are randomly scattered among 0 for the residuals. The scale-location plot has a similar random distribution, allowing us to confirm our equal variance assumption. Our Q-Q plot yields a fairly straight line, meaning the residuals have a highly normal distribution. The experimental design can also be considered independent as each individual we take values from is separate. A certain individual having certain values for blood pressure or cholesterol will not effect, or be effected by, any other participants in the study and we meet our assumption of independence. We can support this conclusion with a Durbin Watson test. For this test, we have a null hypothesis that there is no errors in the auto correlation of the model. The D-W test resulted in a p-value of 0.184. As such we fail to reject the null hypothesis, further supporting the confirmation of our assumption of independence.
+
+d. Write a short paragraph to interpret the results from the analysis in
+C (2 points). Hint: The results should include the estimated coefficient
+and confidence interval, as well as the p-value, with appropriate
+interpretation.
+
+```{r,eval=TRUE}
+# t-test
+summary(model)
+
+# just coefficients
+coefficients(model)
+
+# confidence intervals
+confint(model)
+```
+
+The model yielded an intercept of 2.896, meaning that for an individual with hypertension and a $stressvar=0$, we would expect that $stressvar3$ would equal 2.896. A confidence interval for this value was found as (-3.1611373, 8.899046), meaning that we are 95% sure that the intercept of our model is within this interval.The model estimated a coefficient of 1.036 for stressvar, indicating that for every unit increase of stressvar, stressvar3 would increase by 1.036. A confidence interval for this value was found as (0.9864883, 1.086277), meaning we are 95% sure that the coefficient for stressvar is contained withing this interval. The t-test of stressvar found the variable to be significant, yielding a p-value of less than 2e-16, meaning that if the null hypothesis of this variable not having an effect was true, the results we found would be too unlikely to happen by chance. In contrast, the p-values for blood pressure were 0.554 for both hypotension and normal blood pressure. At a signifigance level of 0.05, we are unable to reject the null hypothesis and we cannot conclude that blood pressure is a significant variable in the model. Both of the confidence intervals from hypotension and normal blood pressure contained zero, supporting this lack of significance. The resulting confidence intervals for these categories were (-1.8813852, 3.497019) and (-1.2335867, 2.294227), respectively, meaning we are 95% confident that the coefficients for blood pressure fall within these intervals.
+
+
+
+e. How to interpret the value of adjusted R-squared? When is better to
+use adjusted $R^2$ than $R^2$? (1 point)
+
+Adjusted r-square is a measure of fit. The adjusted r-squared of the model we developed is 0.9245, meaning that 92.45% of the variation is explained by our model. Adjusted r-squared is preferable for models with multiple variables, as it accounts for the number of predictors in the model. R-squared will increase with the amount of predictors, regardless of relevance. Adjusted r-squared will penalize non-significant predictors, and can be used to better compare between models [1].
+
+f. Do you think blood pressure is a confounding variable in this
+regression analysis? Please explain your thoughts with appropriate
+evidence (e.g., definition, rule of thumb). (3 points; 1 point for the
+Yes/No answer of the question and 2 points for explanation)
+
+Blood pressure is not a confounding variable in this analysis. By definition, if confounding, the variable, blood pressure, would have an effect on both the outcome and the exposure, stressvar3 and stressvar. Both of these variables are measures of stress; however, there is no proof that changes in blood pressure effects stress. The Mayo Clinic suggests that instead, correlations between stress and blood pressure may be a result of unhealthy reactions to stress [2]. With no proven effects on stress, it is unlikely that blood pressure is a confounding variable in this regression analysis.
+
+\
+
+
+
+#### 2. Listed below are the circumferences (in feet) and the heights (in feet) of trees in Marshall, Minnesota. We are interested in whether circumference is a covariate for height. Is there a linear correlation between the two variables?
+
+  --------------------------
+   circumferences   heights
+  ---------------- ---------
+        1.8           21
+
+        1.9          33.5
+
+        1.8          24.6
+
+        2.4          40.7
+
+        5.1          73.2
+
+        3.1          24.9
+
+        5.5          40.4
+
+        5.1          45.3
+
+        8.3          53.5
+
+        13.7         93.8
+
+        5.3           64
+
+        4.9          62.7
+
+        3.7          47.2
+
+        3.8          44.3
+  --------------------------
+
+a. Draw a scatterplot and visual examine the scatterplot and show you
+observations. (2 points)
+
+```{r}
+circ = c(1.8, 1.9, 1.8, 2.4, 5.1, 3.1, 5.5, 5.1, 8.3, 13.7, 5.3, 4.9, 3.7, 3.8)
+height = c(21, 33.5, 24.6, 40.7, 73.2, 24.9, 40.4, 45.3, 53.5, 93.8, 64, 62.7, 47.2, 44.3)
+
+plot(circ,height)
+```
+
+From the scatterplot above, we see a weak positive correlation. Height seems to increase with circumference, however, these points are fairly spread out. Most of the data is slightly clustered but there are several points that have a greater distance from this cluster. While they also follow a roughly positive relation, further analysis is needed to determine outliers or potential linearity.
+
+b. Run a linear regression model and answer the following questions: (1)
+write out the linear regression equation; (1 point) (2) perform the
+hypothesis testing to assess whether there is a significant correlation
+between circumference and height assuming an alpha level at 5%, and
+interpret the slope term with 95% confidence interval and p-value (hint:
+please use the 5-step for hypothesis testing and fully interpret the
+p-value, slope and 95% CI). (5 points; hypothesis testing 4 points and
+interpretation 1 point)
+
+The regression equation for the model is as follows:
+
+$$\hat{y_{height}} = \hat{\beta}_0 + \hat{\beta}_1 * x_{circumference}$$
+
+\
+
+To test the association between height and circumference, we will develop the following hypotheses:
+
+\
+
+$H_{o}: \beta_{1}=0\text{    Circumference is not a significant predictor of height.}$ \
+$H_{A}: \beta_{1}\neq0\text{    Circumference is a significant predictor of height.}$
+
+\
+
+We will use a significance level of 5% to perform our testing.
+
+```{r}
+# model fitting
+df = cbind(data.frame(height), data.frame(circ))
+f = lm(height~circ,data=df)
+
+# model testing
+summary(f)
+confint(f)
+```
+
+Assuming the null hypothesis is true, the sampling distribution should be centered around 0.
+
+From our model, we see that the coefficient for circumference is 5.341. As such, for every unit increase in tree circumference, we expect the height of the tree to increase by an average value of 5.341 feet. From the coefficient t-test, we find a p-value of 0.000252 for circumference. Assuming the null hypothesis is true, this p-value means there would be a 0.0252% probability of getting our results based on chance alone. As such, at our 5% significance level, we find that circumference is a statistically significant predictor of tree height. From the confidence interval of our circumference coefficient, we are 95% confident that the true coefficient for tree circumference falls within the interval (3.069104, 7.612192). All the values contained within this interval are positive, and zero is not contained within the interval, so we can conclude that an increased circumference is a likely predictor of increased tree height.
+
+
+c. Assess the assumptions of the linear regression model. Write your
+observations and conclusions. (4 points)
+
+```{r,eval=TRUE}
+# plots
+autoplot(f)
+
+# secondary independence check
+durbinWatsonTest(f)
+```
+From the residuals v. fitted graph, we see that points are not randomly distributed and a loose fan shape can be seen. Thus, we cannot confirm the linear assumption. Similarly, the scale-location plot shows an unequal scatter of points. Thus the distribution exhibits heteroscedastic behavior.Thus this model fails the equal variance assumption. From the Q-Q plot, the points do not follow a distinct linear distribution, with slight curves in the distribution and tails at either end. Thus, we fail to confirm normality. From the Durbin Watson test, we have a null hypothesis that there is no errors in the auto correlation of the model. The independent variable of the experiment is circumference. No other samples in the experiment will effect this variable; a tree having a certain circumference will not have any bearing on measurements of other trees. As such the model passes the independence assumption. To support this conclusion, we can also use analytical tests. The D-W test resulted in a p-value of 0.354. As such we fail to reject the null hypothesis and we can support our assumption of independence.
+
+d. Calculate the predicted height of a tree with the circumference of 5
+feet, and calculate the expected change in height for a 2 feet decrease
+in circumference of a tree. (2 points)
+
+```{r}
+# model
+eqn = function(x){22.463+5.341*x}
+
+# height of tree with circ. of 5 feet
+eqn(5)
+
+# expected height change for 2 foot decrease
+5.341*(-2)
+  
+```
+
+We expect a tree with a circumference of 5 feet to have a height of 49.168 feet. We would expect a a decrease in tree circumference of 2 feet to yield a resultant height decrease of 10.682 feet.
+
+\
+
+
+
+#### 3. Use the dataset "Patient_Sample.csv" to answer the following: We would like to know if there is an effect on Cholesterol (Normal/High, variable choles) based on smoking status (No/Yes, variable smoker). We want to adjust for the following covariates: obesity status (No/Yes, variable obesity) and blood pressure (Hypotension/Normal/Hypertension variable bp). We would like to evaluate if obesity and blood pressure are effect modifiers. Set as reference levels: the absence of obesity, hypotension and non-smoking. **Use a significance level of 10%**. Give a reduced model (show all the intermediate models and steps). Check for model adequacy. Calculate odds ratios for the reduced model, with 90% CIs, and interpret. (28 points)
+
+a. What are the response variable, main exposure, and covariates? Please
+set up the variables as specified in the question (2 points).
+
+
+In this evaluation, the response variable is cholesterol, as we aim to check if this variable is being effected by smoking status, which presents as the main exposure. The covariates in this model are obesity status, and blood pressure.
+
+
+b. Run the models to evaluate whether obesity is an effect modifier.
+Please include all the variables you defined in A to answer this
+question (2 points).
+
+```{r, eval=TRUE}
+# recoding variables
+sample$bp <- relevel(factor(sample$bp), ref="Hypotension")
+sample$smoker <- relevel(factor(sample$smoker), ref="No")
+sample$obesity <- relevel(factor(sample$obesity), ref="No")
+
+# unadjusted model
+unadj = glm(factor(choles) ~ smoker + obesity + bp, family = binomial(link = "logit"), data = sample)
+
+# interaction model
+intmod_ob = glm(factor(choles)~smoker+obesity+bp+smoker*obesity, data=sample, family = binomial(link = "logit"))
+summary(intmod_ob)
+```
+Our interaction model yields a p-value of 0.4857 for the interaction coefficient between smoking and obesity. Thus, we cannot conclude that obesity modifies the effect of smoking on cholesterol.
+
+c. Run the models to evaluate whether blood pressure is an effect
+modifier. Please include all the variables you defined in A to answer
+this question (2 points).
+
+```{r,eval=TRUE}
+# unadjusted model
+unadj = glm(factor(choles)~smoker+obesity+bp, data=sample, family="binomial")
+
+# interaction model
+intmod_bp = glm(factor(choles)~smoker+obesity+bp+bp*smoker, data=sample, family = binomial(link = "logit"))
+summary(intmod_bp)
+```
+From the outputs, we see that, at the 10% significance level, there is a significant interaction between being a smoker and blood pressure for people who have hypertension. Thus, we can conclude that blood pressure is an effect modifier for smoking's impact on cholesterol.
+
+d. Is blood pressure a confounding variable? (3 points)
+
+Blood pressure is an effect modifier, so it cannot be a confounding variable in this experiment. To verify this, the difference of coefficients can be modeled. If the difference in the estimated smoking coefficient varies by over 10% between the crude model and the model adjusted for blood pressure, confounding could be concluded. The analysis is as follows:
+
+```{r,eval=TRUE}
+# crude model
+crude = glm(factor(choles)~smoker+obesity, data=sample, family="binomial")
+summary(crude)
+
+# adjusted model
+adj_bp = glm(factor(choles)~smoker+bp+obesity, data=sample, family="binomial")
+summary(adj_bp)
+
+# calculate difference of coefficients
+numerator <- coef(crude)[2] - coef(adj_bp)[2]
+denomiator <- coef(adj_bp)[2]
+diff <- numerator/denomiator
+paste0(round(diff*100,3), "%")
+
+```
+The calculated absolute difference in smoking's beta coefficients between the two models is 0.734%, which is much smaller than the 10% threshold used for rule of thumb. Thus we conclude that blood pressure is not a confounder.
+
+e. Is it necessary to include blood pressure into the final model? (1
+point)
+
+At our chosen significance level, blood pressure is an effect modifier. In order to not lose this significant interaction, we must include blood pressure in the final model.
+
+f. Present the equation of the final model and interpret the results (6
+points). Hint: The results should include the OR and confidence
+interval, as well as the p-value.
+
+The final model for our cholesterol outcome is as follows:
+
+\begin{align*}
+    \hat{y_{choles}} &= \hat{\beta}_0 + \hat{\beta}_1 * x_{smokerYes} + \hat{\beta}_2 * x_{obesityYes} \\
+    &\quad + \hat{\beta}_3 * x_{bpHypertension} + \hat{\beta}_4 * x_{bpNormal} \\
+    &\quad + \hat{\beta}_5 * x_{smokerYes:bpHypertension} + \hat{\beta}_6 * x_{smokerYes:bpNormal}
+\end{align*}
+
+
+Filling in the $\hat{\beta}$ values, this equation becomes:
+
+\begin{align*}
+    \hat{y_{choles}} &= -0.0504 + 0.8508 * x_{smokerYes} + 0.6492 * x_{obesityYes} \\
+    &\quad + 0.8047 * x_{bpHypertension} + 0.7389 * x_{bpNormal} \\
+    &\quad - 2.2794 * x_{smokerYes:bpHypertension} - 1.4702 * x_{smokerYes:bpNormal}
+\end{align*}
+
+
+```{r,eval=TRUE}
+# t-test
+summary(intmod_bp)
+
+# 90% CI for coefficients
+confint(intmod_bp,level=0.90)
+
+# odds ratio with 90% CI
+intmod_OR <- exp(cbind(coef(intmod_bp), confint(intmod_bp,level=0.90)))
+intmod_OR
+
+```
+
+- The estimated difference in log odds of cholesterol change for patients who are nonsmokers, hypotensive, and not obese is -0.0504 (90% CI: -0.76036890, 0.6618711); p-value=0.9063), with a corresponding odds ratio of 0.9508.
+
+- The estimated log odds ratio of change of cholesterol for patients comparing those who are smokers, hypotensive, and not obese, compared to nonsmokers is 0.8508 (90% CI: (-0.6024, 2.5464); p-value = 0.3600), with a corresponding odds ratio of 2.3416.
+
+- The estimated log odds ratio of cholesterol for patients who are nonsmokers, hypotensive, and are obese, compared to non-obese patients is 0.6492 (90% CI: (0.0315, 1.3102); p-value = 0.0932), with a corresponding odds ratio of 1.9140.
+
+- The estimated log odds of cholesterol change for patients who are nonsmokers, hypertensive, and not obese, compared to hypotensive patients is 0.8047 (90% CI: (-0.0456, 1.6619); p-value = 0.1191), with a corresponding odds ratio of 2.2360.
+
+- The estimated log odds of cholesterol change for patients who are nonsmokers, normal blood pressure, and not obese, compared to hypotensive patients is 0.7389 (90% CI: (-0.0460, 1.5237); p-value = 0.1191), with a corresponding odds ratio of 2.0937.
+
+- The estimated difference in log odds ratio of cholesterol change for non-obese smokers with hypertension, compared to
+non-smokers is -2.2794 (90% CI: (-4.3264, -0.4131); p-value = 0.0518), with a corresponding odds ratio of 0.1023.
+
+- The estimated difference in log odds ratio of cholesterol change for non-obese smokers with normal blood pressure, compared to non-smokers is -1.4702 (90% CI: (-3.2809, 0.1350); p-value = 0.1476), with a corresponding odds ratio of 0.2299
+
+
+
+g. Now, consider we have the following result from a polite study. The
+result indicates the probability of high cholesterol for a non-smoker is
+35%, the percentage of smokers is 20%, and the estimated odds ratio of
+high cholesterol comparing smoker vs non-smoker is 1.80. Assuming there
+is no other covariates in the study, please calculate the required
+sample size to achieve 80% power at a significance level of 0.10. Please
+include a reference for the method you used. (5 points)
+
+The odds ratio of high cholesterol comparing smoker vs non-smoker is 1.80. The formula for odds ratio is:
+
+\begin{align*}
+OR = \frac{P(Y=1|X = 1)/[1 − P(Y=1|X = 1)]}{P(Y=1|X = 0)/[1 − P(Y=1|X = 0)]}
+\end{align*}
+
+Where $X=1$ denotes being a smoker, $X=0$ denotes being a nonsmoker, and $Y=1$ denotes having high cholesterol. We have values for the odds ratio and probability of having high cholesterol, given being a non-smoker. With these values, we will first solve for $P(Y=1|X = 1)/[1 − P(Y=1|X = 1)]$
+
+```{r,eval=TRUE}
+# givens from the question
+OR = 1.80
+Prob_Y1_X0 = 0.35
+
+# solving for P(Y=1|X = 1)/[1 − P(Y=1|X = 1)]
+pr = OR*(Prob_Y1_X0/(1-Prob_Y1_X0))
+pr
+```
+
+From the above evaluation, we find that $P(Y=1|X = 1)/[1 − P(Y=1|X = 1)] = 0.9692$. Representing $P(Y=1|X = 1)$ as $f$, we will solve as: 
+
+\begin{align*}
+pr = \frac{f}{1-f} \\
+pr-pr*f = f\\
+pr = f+pr*f\\
+f = \frac{pr}{1+pr}\\
+f = \frac{0.9692}{1+0.9692}\\
+f = 0.4921875
+\end{align*}
+
+Thus, we find that $P(Y=1|X=1)$ is equal to $0.4921875$. We can then find the sample size. 
+
+We will use the function wp.logistic in the WebPower package to directly calculate the sample size [3].
+For this calculation, the following parameters are needed:
+
+- n: sample size - this will be NULL as this is the parameter of interest
+- p0: P(Y=1|X=0) = 0.35
+- p1: P(Y=1|X=1) = 0.4921875
+- alpha: significance level = 0.1 for this experiment
+- power: statistical power = 0.8 for this experiment
+- alternative: "two.sided" - we are searching for a difference, not any greater/less event
+- family: "Bernoulli" - cholesterol and smoking are both binary variables
+- parameter: the parameter for Bernoulli is 0.5
+
+```{r,eval = TRUE}
+# size calculation
+wp.logistic(n = NULL,p0=0.35,p1=0.4921875,alpha=0.1,power=0.8, 
+            alternative="two.sided",family="Bernoulli",parameter=0.5)
+
+```
+
+From the evaluation, we find that $n=300.496$. Thus, for an experiment with 80% power at a significance level of 0.10, the required sample size is at least 301 people.
+
+
+\
+
+
+
+#### References
+
+\
+
+[1] GeeksforGeeks. (2024, June 24). R-squared vs Adjusted R-squared Difference? GeeksforGeeks; GeeksforGeeks. https://www.geeksforgeeks.org/r-squared-vs-adjusted-r-squared-difference/
+
+[2] Mayo Clinic. (2021). Stress and high blood pressure: What’s the connection? Mayo Clinic. https://www.mayoclinic.org/diseases-conditions/high-blood-pressure/in-depth/stress-and-high-blood-pressure/art-20044190
+
+[3] R: Statistical Power Analysis for Logistic Regression. (2018). R-Project.org. https://search.r-project.org/CRAN/refmans/WebPower/html/wp.logistic.html

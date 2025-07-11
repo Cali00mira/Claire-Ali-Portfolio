@@ -1,0 +1,202 @@
+---
+title: "Assignment 2 Solution"
+author: "Claire Ali"
+date: "1/28/2025"
+output:
+  pdf_document: default
+  html_document: default
+subtitle: 'Data 621: Advanced Statistical Modeling'
+---
+
+****
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warn=-1, message=FALSE)
+pack <- c("knitr", "rmarkdown", "knitcitations", "pander")
+
+new.packages <- pack[!(pack %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+lapply(pack, require, character.only = TRUE)
+```
+
+```{css, echo=FALSE}
+.blackbox {
+  padding: 1em;
+  background: #EFFAFE;
+  color: black;
+  border: 1px solid grey;
+  border-radius: 10px;
+}
+
+.center {
+  text-align: center;
+}
+```
+
+
+
+### Questions:
+
+
+#### 1. In a classroom of 48 students arranged in six rows of 8 students each, the professor selects a sample of 8 students by rolling a die and selecting the row corresponding to the outcome. Is the result a random sample? Is this a simple random sample? Please provide explanation of your answer. (2 points)
+
+\
+
+Assuming each of the students were randomly assigned to each row and randomly ordered, the sample will indeed be random. All groups are the same size and the dice has an equal probability of selecting each of the six rows. While this may be a clustered sample, each cluster has an equal probability of being selected so this example qualifies as a simple random sample.
+
+
+\
+
+
+
+#### 2. Agricultural related injuries: A cohort study of agriculture-related injuries among farm owners and farm workers from Alabama and Mississippi evaluated the experience of 685 Caucasian farm owners, 321 African--American farm owners, and 240 African--American farm workers ([McGwin et al., 2000](https://academic.oup.com/aje/article/152/7/640/75176)). Subjects were contacted biannually to ascertain the occurrence of agriculture-related injuries. Is this study prospective or retrospective in design? Please provide explanation of your answer. (1 point)
+
+\
+
+This study is an example of a prospective study design. The study first details the exposure, which was collected as baseline data for factors such as a detailed demographic, farm and farming, and behavioral information. In the course of study, they collected data on agriculture-related injuries, which was the outcome/disease of the study. By starting with the exposure and then seeking the outcome, this study is able to be classified as prospective. 
+
+
+
+\
+
+
+#### 3. Please identify the study design (experimental, case-control, cross-section, cohort, or case-series) for the following studies. Please explain your choice (using one or two sentences). 2 points for each sub-question with 1 mark for the choice and 1 mark for the explanation.
+
+\ 
+
+a. The Iowa Women's Health Study, in which researchers enrolled 41,837 women in 1986 and collected exposure and lifestyle information to assess the relationship between these factors and subsequent occurrence of cancer.
+
+\
+
+This is a cross-sectional study. The data was all collected at a single point in time and evaluated without past/future consideration for the study design.
+
+b. Years ago there was a multistate outbreak of illnesses caused by a specific and unusual strain of Listeria monocytogenes. As part of the investigation of this outbreak, CDC workers checked the food histories
+of 20 patients infected with the outbreak strain and compared them with the food histories of 20 patients infected with other Listeria strains.
+
+\
+
+This is a case-control study. The disease outcome was known prior to the course of the study and the participants were selected based on this disease status. An additional control group was created, containing more common listeria strains, with both groups being assessed retrospectively for exposure characteristics. 
+
+c. The Centers for Disease Control obtains current flu data by polling 3000 people this month and they would like to study the flu incidence.
+
+\
+
+This is a cross sectional study. There is no time dependence for this poll, as it provides flu cases at a single point in time, without regard to past/future cases. Participants were also not selected based on any exposure or shared characteristic. 
+
+d. A study in which children are randomly assigned to receive either a newly formulated vaccine or the currently available vaccine, and are followed to monitor for side effects and effectiveness of each vaccine.
+
+\
+
+This is an experimental trial. This study is not observational, as participants were randomly assigned to exposure groups. This interventional study starts with an applied exposure and then determines the outcome, following the participants in the future.
+
+e. British investigators conducted a study in UK to compare
+measles-mumps-rubella (MMR) vaccine history among 1,294 children with pervasive development disorder (e.g., autism and Asperger's syndrome) and 4,469 children without such disorders. The children included in the study were under 12 years old who had vaccine data records in the history. (They found no association.)
+
+\
+
+This is a case-control study. The participants who were selected had Aspergers, for the case group, and those who did not, for the control group. Both groups were assessed retrospectively for the exposure (MMR Vaccine).
+
+\
+
+#### 4. In "Cardiovascular Effects of Intravenous Triiodothyronine in Patients Undergoing Coronary Artery Bypass Graft Surgery" (Journal of the American Medical Association, Vol. 275, No.9), the authors explain that patients were assigned to one of three groups: (1) a group treated with triiodothyronine, (2) a group treated with normal saline bolus and dopamine, and (3) a placebo group given normal saline. The authors summarize the sample design as a "**prospective, randomized, double-blinded, placebo-controlled trial**"-- Please describe the meaning of each of those four bold terms in the context of this study. (4 points)
+
+a. Prospective:
+The outcome is not known. This study looks to the future as is examines possible causes and effects. The study begins with an exposure and then follows the participants into the future to assess possible outcomes.
+
+b. Randomized:
+The participants were not selected to receive any specified treatment. Each participant had a random, equal opportunity chance of being assigned to any of the three groups in the study.
+
+c. Double-Blinded:
+For this study, a double blind trial means that both the research staff applying the treatments and the participant receiving the treatments were not told which treatment/placebo was being used.
+
+d. Placebo-Controlled:
+One of the groups will be receiving saline, which will provide no overall effect, positive or negative, on the patient receiving it. As such, any varying effects in the outcome of the study can be attributed to the applied treatment and a baseline is created for a medical outcome with no drug-based intervention.
+
+
+\
+
+#### 5. What distinguishes experimental study designs from observational study designs? (1 point)
+
+\
+
+In an experimental study, exposures will be assigned and controlled to answer a predetermined research question. In contrast, an observational study does not seek to control variables and will follow exposures/outcomes naturally. These exposures/outcomes may be used to specifically select a group for observation, but no intervention will occur post-selection.
+
+\
+
+#### 6. What distinguishes a cohort study from a case-control study? (1 point)
+
+\
+
+These two study methods differ in their order of disease-exposure evaluation. Cohort studies use participants who are selected and grouped into a cohort based on a shared exposure. The outcomes are then evaluated over time, prospectively or retrospectively. A case-control study selects participants based on their disease status, with a control group for comparison. The possible exposures are then assessed. 
+
+\
+
+#### 7. There is a study that got a random sample of participants who were assigned to treatment or control protocol based on the color of their eyes. Of note, the sample was truly a random sample. Can this qualify as a randomised control trial? Please provide explanation of your answer. (1 point)
+
+\
+
+This is not a randomized control trial. While the initial selection of participants was random, a RCT must randomly assign participants to exposure groups. Since assignment of exposure groups was made on a characteristic rather than random process, this trial cannot be declared a RCT.
+
+
+\
+
+#### 8. In the following two questions, please identify the **sample** and the **population**. Also, comment on whether the sample is likely to be representative of the population considering the sampling method, sample size, and population variability. (8 points)
+
+a. A marine biologist obtains the weights of rainbow trout that she catches in a net. (2 points)
+
+\
+
+The population is all the rainbow trout in the body of water and the sample is all the rainbow trout that she catches. any variability in the population will be due to natural causes. Assuming the net is sufficient for trapping any size fish, the sample can be considered random enough to be representative of the population.
+
+b. In a Gallup poll of 1060 randomly selected adults in 2000, 39% answered "yes" when asked "Do you have a computer at home?" (2 points)
+
+\
+
+The population is all adults in 2000 and the sample is the 1060 randomly selected adults. Based on the information in the question, this sample is unlikely to be representative of the population. While the sample size is fairly large and random, the population variability is too high. We don't know if this is all adults in the US, Canada, or the world. Countries with a greater rural population are less likely to have computers; as such, for the incredibly unspecified population of all adults, this sample is unlikely to be representative.
+
+c. We want to know the average (mean) amount of money first year college students spend at ABC College on school supplies that do not include books. We randomly surveyed 100 first year students at the college. Three of those students spent \$150, \$200, and \$225, respectively. (2 points)
+
+\
+
+The population is first year students at ABC college and the sample is 100 first year students. While there may be slight population variability in spending based on factors such as family income, the sample size is fairly large. The large sample size and random selection of students help overcome population variability; this sample is likely a fair representation of the population.
+
+d. An insurance company would like to determine the proportion of all medical doctors who have been involved in one or more malpractice lawsuits. The company selects the first 500 doctors from a professional directory and determines the number in the sample who have been involved
+in a malpractice lawsuit. (2 points)
+
+\
+
+The population is all medical doctors in a directory and the sample is the first 500 doctors in the directory. While the sample is fairly large, the selection method is not random. As such, the sample is unlikely to be representative of the population. Furthermore, we do not know how the directory is organized, which may yield a high population variability. If senior doctors are listed first, they may have a significant difference when compared to newer doctors, who have handled fewer total patients. 
+
+\
+
+
+
+#### 9. Using the below abstract identify the PECO elements of the research question as well as the study design. (5 points)
+
+- Population: The population of this study is the 116.430 women in the Nurses Health Study II from 1989 to 2009 who did not have a history of heart disease and stroke.
+- Intervention/Exposure: This study observed an exposure of women with laparoscopically confirmed endometriosis.
+- Comparator/Control: The comparator in this study was women without endometriosis.
+- Outcome: The outcome of the study was the risk factor for coronary heart disease (CHD).  
+\ 
+- Study Design: This study is a retrospective cohort study. Two cohorts were assembled based on exposure and comparator characteristics. After starting with the exposure (has endometriosis), the study moves backward in time to the outcome, seeking whether there is an observable increased risk of CHD.
+
+
+
+#### 10. Using the below abstract identify the PECO elements of the research question as well as the study design. (5 points)
+
+- Population: The population is 11,396 adults, aged 29 to 64 years, living in the United Kingdom.
+- Intervention/Exposure: The exposure variables for the participants in the study are (1) the consumption of home-cooked meals at a higher frequency (more than five times per week), (2) higher diet quality scores, and (3) higher markers of cardiometabolic health
+- Comparator/Control: The comparator variable for the participants in the study were (1) the consumption of home-cooked meals at a lower frequency (less than 3 times times per week), (2) lower diet quality scores, and (3) lower markers of cardiometabolic health
+- Outcome: The outcome of the study was associations between frequency of home-cooked meal consumption with both diet quality scores and markers of cardiometabolic health.
+\ 
+- Study Design: The study is a cross-sectional study. All observed data was taken at the same instance, and participants were included in the study without regard to what their exposure or outcome status may be.
+
+
+
+
+
+
+
+
+
+
